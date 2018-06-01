@@ -6,6 +6,7 @@ GetOptions ('-t=i', \my $teams,
 	'-ew=i', \my $ew_up,
 	'-s=s', \my $sessions,
         '-b=i', \my $boards,
+	'-n=s', \my $name,
 ) or die;
 
 my @sessions;
@@ -30,8 +31,9 @@ die "Not enough data\n" unless $teams and $rounds;
 
 $ew_up = 2 - ($teams % 2) unless $ew_up;
 $boards = int(110/$rounds) unless $boards;
-warn "teams = $teams; sitout = $sitout; rounds = $rounds; ".
-	"EW up = $ew_up, boards = $boards\n";
+$name = 'Flower' unless $name;
+warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
+	"EW up = $ew_up; boards = $boards\n";
 
 unshift @sessions, ($rounds - $total);
 warn "sessions = @sessions\n";
@@ -40,7 +42,7 @@ my $r = 0;
 for my $s (1 .. $#sessions, 0) {
     my $session = $sessions[$s];
     next unless $session > 0;
-    my $head = "Flower: EW ". sprintf "%+d", $ew_up;
+    my $head = sprintf "%s T%d: EW %+d", $name, $teams, $ew_up;
     $head .= ": Session $s" if $s;
     $head .= ": Round";
     $head .= "s " . ($r + 1) . "-" if $session > 1;
