@@ -29,9 +29,13 @@ else {
 }
 die "Not enough data\n" unless $teams and $rounds;
 
+unless ($name) {
+    require File::Basename;
+    $name = ucfirst (File::Basename::fileparse($0, qr(\.p.*)));
+}
+    
 $ew_up = 2 - ($teams % 2) unless $ew_up;
 $boards = int(110/$rounds) unless $boards;
-$name = 'Flower' unless $name;
 warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
 	"EW up = $ew_up; boards = $boards\n";
 
