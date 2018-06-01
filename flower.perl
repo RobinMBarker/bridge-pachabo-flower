@@ -1,6 +1,6 @@
 use strict;
 use Getopt::Long;
-use List::Util qw(sum max);
+use List::Util qw(sum);
 
 GetOptions ('-t=i', \my $teams, 
 	'-ew=i', \my $ew_up,
@@ -8,9 +8,11 @@ GetOptions ('-t=i', \my $teams,
         '-b=i', \my $boards,
 ) or die;
 
-my @sessions = split /,/, $sessions;
+my @sessions;
+@sessions = split /,/, $sessions if defined $sessions;
+my $total = (sum @sessions) || 0;
 
-my $sitout;
+my $sitout = 0;
 my $rounds;
 if( $teams ) {
     $sitout = $teams % 2;
@@ -18,18 +20,21 @@ if( $teams ) {
     $rounds-- unless $sitout;
 }
 else {
-    $sitout = ($ew_up and $ew_up % 2);
-    $rounds = sum @sessions;
+    $sitout = $ew_up % 2 if $ew_up;
+    $rounds = $total;
     $rounds++ if $rounds % 2 == 0;
     $teams = $rounds;
     $teams++ unless $sitout;
 }
+die "Not enough data\n" unless $teams and $rounds;
+
 $ew_up = 2 - ($teams % 2) unless $ew_up;
-$boards = int(36 / (max @sessions)) unless $boards;
+$boards = int(110/$rounds) unless $boards;
 warn "teams = $teams; sitout = $sitout; rounds = $rounds; ".
 	"EW up = $ew_up, boards = $boards\n";
 
-push @sessions, ($rounds - (sum @sessions));
+unshift @sessions, ($rounds - $total);
+warn "sessions = @sessions\n";
 
 my $r = 0;
 for my $s (1 .. $#sessions, 0) {
@@ -44,7 +49,7 @@ for my $s (1 .. $#sessions, 0) {
     warn $head;
 
     print $head;
-    print "5,28,", $session * $boards, ",$boards,$session\n";
+    print "5,$teams,", $session * $boards, ",$boards,$session\n";
 
     my @rover;
     for my $ns (1 .. $rounds) {
