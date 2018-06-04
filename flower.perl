@@ -98,3 +98,59 @@ unless ($stdout) {
     warn "Movement written to $file\n";
 }
 
+__END__
+
+=head1 NAME
+
+flower.perl - create flower teams movements in JSS/EBUScore format
+
+=head1 USAGE
+
+perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
+[-] [-f file] [-F file] 
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h> 
+
+Print this help
+
+=item B<-t> num
+
+Number of teams
+
+=item B<-ew> num
+
+Signed movement of EW pairs: +2 for 'up two', -1 for down 'one'
+
+=item B<-s> string
+
+Comma separated list of session lengths (rounds per session)
+
+=item B<-b> num
+
+Number of board per round: defaults total movement of approx 100
+
+=item B<-n> name
+
+Name of movement
+
+=item B<->
+
+Write to STDOUT
+
+=item B<-f> file
+
+Write to file: default 'TSUserMovements.txt'
+
+=item B<-F> file
+
+As B<-f> but start new file
+
+=back
+
+
+
+
