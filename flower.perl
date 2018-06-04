@@ -1,14 +1,27 @@
 use strict;
-use Getopt::Long;
+use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
+my($file, $force);
 GetOptions ('-t=i', \my $teams, 
 	'-ew=i', \my $ew_up,
 	'-s=s', \my $sessions,
         '-b=i', \my $boards,
 	'-n=s', \my $name,
+	'',	\my $stdout,	# matches lone -
+	'-f=s',    \$file,
+	'-F=s', sub { (undef,$file) = @_; $force++; }
 ) or die;
 
+warn "Ignored: @ARGV\n" if @ARGV;
+
+$stdout++ if ($file and $file eq '-');
+unless ($stdout) {
+    $file = 'TSUserMovements.txt' unless $file;
+    my $mode = ($force ? '>' : '>>');
+    open STDOUT, $mode, $file or die "Can't open $mode $file: $!\n";
+}
+    
 my @sessions;
 @sessions = split /,/, $sessions if defined $sessions;
 my $total = (sum @sessions) || 0;
@@ -54,6 +67,7 @@ for my $s (1 .. $#sessions, 0) {
     $head .= "\n";
     warn $head;
 
+    print "\n";
     print $head;
     print "5,$teams,", $session * $boards, ",$boards,$session\n";
 
@@ -75,9 +89,12 @@ for my $s (1 .. $#sessions, 0) {
       }
       print "\n";
     }
-    print "\n";
     $r += $session;
 }
-warn "$r rounds\n" unless $r == $rounds;
+warn "$r rounds: expected $rounds rounds\n" unless $r == $rounds;
 
+unless ($stdout) {
+    close STDOUT or die $!;
+    warn "Movement written to $file\n";
+}
 
