@@ -1,9 +1,11 @@
 use strict;
+use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
 my($file, $force);
-GetOptions ('-t=i', \my $teams, 
+GetOptions ('-h', \my $help,
+	'-t=i', \my $teams, 
 	'-ew=i', \my $ew_up,
 	'-s=s', \my $sessions,
         '-b=i', \my $boards,
@@ -11,9 +13,9 @@ GetOptions ('-t=i', \my $teams,
 	'',	\my $stdout,	# matches lone -
 	'-f=s',    \$file,
 	'-F=s', sub { (undef,$file) = @_; $force++; }
-) or die;
+) or pod2usage(2);
 
-warn "Ignored: @ARGV\n" if @ARGV;
+pod2usage(1) if $help;
 
 $stdout++ if ($file and $file eq '-');
 unless ($stdout) {
@@ -25,6 +27,21 @@ unless ($stdout) {
 my @sessions;
 @sessions = split /,/, $sessions if defined $sessions;
 my $total = (sum @sessions) || 0;
+
+pod2usage ( 
+	-message => "Not enough data",
+	-verbose => 1,
+	-output  => \*STDERR,
+	-exitval => 2,
+) unless ($teams or $total > 0);
+
+
+pod2usage ( 
+	-message => "Ignored: @ARGV",
+	-verbose => 0,
+	-output  => \*STDERR,
+	-exitval => q(NOEXIT),
+) if @ARGV;
 
 my $sitout = 0;
 my $rounds;
@@ -40,7 +57,6 @@ else {
     $teams = $rounds;
     $teams++ unless $sitout;
 }
-die "Not enough data\n" unless $teams and $rounds;
 
 unless ($name) {
     require File::Basename;
@@ -62,8 +78,9 @@ for my $s (1 .. $#sessions, 0) {
     my $head = sprintf "%s T%d: EW %+d", $name, $teams, $ew_up;
     $head .= ": Session $s" if $s;
     $head .= ": Round";
-    $head .= "s " . ($r + 1) . "-" if $session > 1;
-    $head .= $r + $session;
+    $head .= "s" if $session > 1;
+    $head .= " ". ($r + 1);
+    $head .= "-". $r + $session if $session > 1;
     $head .= "\n";
     warn $head;
 
