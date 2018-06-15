@@ -12,7 +12,9 @@ GetOptions ('-h', \my $help,
 	'-n=s', \my $name,
 	'',	\my $stdout,	# matches lone -
 	'-f=s',    \$file,
-	'-F=s', sub { (undef,$file) = @_; $force++; }
+	'-F:s', sub { (undef,$file) = @_; $force++; },
+	'--missing-boards!',	\my $sitout_boards,
+	'--missing-EW!',	\my $sitout_ew,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -64,12 +66,25 @@ unless ($name) {
 }
     
 $ew_up = 2 - ($teams % 2) unless $ew_up;
-$boards = int(110/$rounds) unless $boards;
+$boards = int(100/$rounds+0.5) unless $boards;
 warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
-	"EW up = $ew_up; boards = $boards\n";
+	"EW-up = $ew_up; boards = $boards\n";
+
+if ( $sitout ) {
+    unless (defined $sitout_boards or defined $sitout_ew ) {
+	$sitout_boards = 1; 	# default to old behaviour
+    }
+    no warnings qw(uninitialized);
+    warn "At sitout table".
+	": missing boards=$sitout_boards".
+	"; missing EW=$sitout_ew\n"
+}
 
 unshift @sessions, ($rounds - $total);
 warn "sessions = @sessions\n";
+{ my $total_boards = $rounds * $boards; 
+  warn "total boards: $total_boards\n"; 
+}
 
 my $r = 0;
 for my $s (1 .. $#sessions, 0) {
@@ -80,7 +95,7 @@ for my $s (1 .. $#sessions, 0) {
     $head .= ": Round";
     $head .= "s" if $session > 1;
     $head .= " ". ($r + 1);
-    $head .= "-". $r + $session if $session > 1;
+    $head .= "-". ($r + $session) if $session > 1;
     $head .= "\n";
     warn $head;
 
@@ -88,20 +103,29 @@ for my $s (1 .. $#sessions, 0) {
     print $head;
     print "5,$teams,", $session * $boards, ",$boards,$session\n";
 
+    my $sep = q(, );	# separator between (NS,EW,board-set) triples
     my @rover;
     for my $ns (1 .. $rounds) {
       for my $b (1..$session) {
         my $ew = ($rounds + 1 - $ns + $ew_up * ($r + $b - 1)) % $rounds + 1;
-        if ($ew == $ns and not $sitout) { $ew = $teams; $rover[$b]=$ns; }
-        print "," if $b > 1;
-        print "$ns,$ew,", ($ew == $ns ? 0 : $b);
+        print $sep if $b > 1;
+
+	my $board_set = $b;
+        if ($ew == $ns) {
+	    if ($sitout) {
+		$ew = 0 if $sitout_ew;
+		$board_set = 0 if $sitout_boards; 
+	    }
+	    else { $ew = $teams; $rover[$b]=$ns; }
+	}
+        print "$ns,$ew,$board_set";
       }
       print "\n";
     }
     unless( $sitout ) {
       for my $b (1..$session) {
         die unless $rover[$b];
-        print "," if $b > 1;
+        print $sep if $b > 1;
         print "$teams,$rover[$b],$b";
       }
       print "\n";
@@ -124,7 +148,7 @@ flower.perl - create flower teams movements in JSS/EBUScore format
 =head1 USAGE
 
 perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
-[-] [-f file] [-F file] 
+[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW] 
 
 =head1 OPTIONS
 
@@ -148,7 +172,9 @@ Comma separated list of session lengths (rounds per session)
 
 =item B<-b> num
 
-Number of board per round: defaults total movement of approx 100
+Number of board per round: 
+
+defaults to a complete movement of approx 100 boards
 
 =item B<-n> name
 
@@ -162,12 +188,27 @@ Write to STDOUT
 
 Write to file: default 'TSUserMovements.txt'
 
-=item B<-F> file
+=item B<-F> [file]
 
 As B<-f> but start new file
 
+Standalone B<-F> starts new 'TSUserMovements.txt'
+
+=item B<--missing-EW> [B<--nomissing-EW>]
+
+At the sitout table, show EW as 0
+
+=item B<--missing-boards> [B<--nomissing-boards>]
+
+At the sitout table, show board-set as 0
+
+Default is B<--missing-boards>: but
+B<--nomissing-boards>
+will set both board-set and EW at sitout table.
+
 =back
 
+=cut
 
 
 
