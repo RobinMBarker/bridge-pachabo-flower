@@ -2,40 +2,38 @@ use strict;
 use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
+use JSON;
 
 my($file, $force);
 GetOptions ('-h', \my $help,
 	'-t=i', \my $teams, 
 	'-ew=i', \my $ew_up,
-	'-s=s', \my $sessions,
-        '-b=i', \my $boards,
-	'-n=s', \my $name,
 	'',	\my $stdout,	# matches lone -
 	'-f=s',    \$file,
 	'-F:s', sub { (undef,$file) = @_; $force++; },
 	'--missing-boards!',	\my $sitout_boards,
 	'--missing-EW!',	\my $sitout_ew,
+#    '--json', \my $json,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
 
 $stdout++ if ($file and $file eq '-');
 unless ($stdout) {
-    $file = 'TSUserMovements.txt' unless $file;
+    unless ( $file ) {    
+        $file = 'config.json';
+#       $file = $json ? 'config.json':'TSUserMovements.txt';
+    }
     my $mode = ($force ? '>' : '>>');
     open STDOUT, $mode, $file or die "Can't open $mode $file: $!\n";
 }
     
-my @sessions;
-@sessions = split /,/, $sessions if defined $sessions;
-my $total = (sum @sessions) || 0;
-
 pod2usage ( 
 	-message => "Not enough data",
 	-verbose => 1,
 	-output  => \*STDERR,
 	-exitval => 2,
-) unless ($teams or $total > 0);
+) unless $teams;
 
 
 pod2usage ( 
@@ -52,87 +50,38 @@ if( $teams ) {
     $rounds = $teams;
     $rounds-- unless $sitout;
 }
-else {
-    $sitout = $ew_up % 2 if $ew_up;
-    $rounds = $total;
-    $rounds++ if $rounds % 2 == 0;
-    $teams = $rounds;
-    $teams++ unless $sitout;
-}
-
-unless ($name) {
-    require File::Basename;
-    $name = ucfirst (File::Basename::fileparse($0, qr(\.p.*)));
-}
     
 $ew_up = 2 - ($teams % 2) unless $ew_up;
-$boards = int(100/$rounds+0.5) unless $boards;
-warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
-	"EW-up = $ew_up; boards = $boards\n";
+warn "json: teams = $teams; sitout = $sitout; rounds = $rounds; ".
+	"EW-up = $ew_up\n";
 
 if ( $sitout ) {
     unless (defined $sitout_boards or defined $sitout_ew ) {
 	$sitout_boards = 1; 	# default to old behaviour
     }
-    no warnings qw(uninitialized);
-    warn "At sitout table".
-	": missing boards=$sitout_boards".
-	"; missing EW=$sitout_ew\n"
 }
 
-unshift @sessions, ($rounds - $total);
-warn "sessions = @sessions\n";
-{ my $total_boards = $rounds * $boards; 
-  warn "total boards: $total_boards\n"; 
-}
-
-my $r = 0;
-for my $s (1 .. $#sessions, 0) {
-    my $session = $sessions[$s];
-    next unless $session > 0;
-    my $head = sprintf "%s T%d: EW %+d", $name, $teams, $ew_up;
-    $head .= ": Session $s" if $s;
-    $head .= ": Round";
-    $head .= "s" if $session > 1;
-    $head .= " ". ($r + 1);
-    $head .= "-". ($r + $session) if $session > 1;
-    $head .= "\n";
-    warn $head;
-
-    print "\n";
-    print $head;
-    print "5,$teams,", $session * $boards, ",$boards,$session\n";
-
-    my $sep = q(, );	# separator between (NS,EW,board-set) triples
-    my @rover;
+my @rounddata;
+for my $r (1 .. $rounds) {
+    my @data;
+    my $rover;
     for my $ns (1 .. $rounds) {
-      for my $b (1..$session) {
-        my $ew = ($rounds + 1 - $ns + $ew_up * ($r + $b - 1)) % $rounds + 1;
-        print $sep if $b > 1;
-
-	my $board_set = $b;
+        my $ew = ($rounds + 1 - $ns + $ew_up * ($r - 1)) % $rounds + 1;
         if ($ew == $ns) {
-	    if ($sitout) {
-		$ew = 0 if $sitout_ew;
-		$board_set = 0 if $sitout_boards; 
+	        if ($sitout) {
+		        $ew = 0 if $sitout_ew;
+	        }
+	        else { $ew = $teams; $rover=$ns; }
 	    }
-	    else { $ew = $teams; $rover[$b]=$ns; }
-	}
-        print "$ns,$ew,$board_set";
-      }
-      print "\n";
+        push @data, $ew+0;
     }
-    unless( $sitout ) {
-      for my $b (1..$session) {
-        die unless $rover[$b];
-        print $sep if $b > 1;
-        print "$teams,$rover[$b],$b";
-      }
-      print "\n";
-    }
-    $r += $session;
+    push @data, $rover if $rover;
+    push @rounddata, \@data;
 }
-warn "$r rounds: expected $rounds rounds\n" unless $r == $rounds;
+
+my $output = to_json(\@rounddata);
+$output =~ s/(\],)/$1\n\t/g;
+print $output,"\n";
 
 unless ($stdout) {
     close STDOUT or die $!;
