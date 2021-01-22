@@ -14,15 +14,23 @@ GetOptions ('-h', \my $help,
 	'-f=s',    \$file,
 	'-F:s', sub { (undef,$file) = @_; $force++; },
 	'--missing-boards!',	\my $sitout_boards,
-	'--missing-EW!',	\my $sitout_ew,
+	'--missing-EW!',    \my $sitout_ew,
+    '--json', \my $json,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
 
 $stdout++ if ($file and $file eq '-');
 unless ($stdout) {
-    $file = 'TSUserMovements.txt' unless $file;
-    my $mode = ($force ? '>' : '>>');
+    my $mode;
+    if ( $json ) {
+        $file = 'config.json' unless $file;
+        $mode = '>';
+    }
+    else {
+        $file = 'TSUserMovements.txt' unless $file;
+        $mode = ($force ? '>' : '>>');
+    }
     open STDOUT, $mode, $file or die "Can't open $mode $file: $!\n";
 }
     
@@ -61,8 +69,13 @@ else {
 }
 
 unless ($name) {
+  if ( $json ) {
+    $name = 'JSON'
+  }
+  else {
     require File::Basename;
     $name = ucfirst (File::Basename::fileparse($0, qr(\.p.*)));
+  }
 }
     
 $ew_up = 2 - ($teams % 2) unless $ew_up;
@@ -86,8 +99,32 @@ warn "sessions = @sessions\n";
   warn "total boards: $total_boards\n"; 
 }
 
-my $r = 0;
-for my $s (1 .. $#sessions, 0) {
+my @oppodata;
+for my $r (1 .. $rounds) {
+    my $rover;
+    my @oppo;
+    for my $t (1 .. $rounds) {
+        my $v = ($rounds + 1 - $t + $ew_up * ($r - 1)) % $rounds + 1;
+        if ( $v == $t ) {
+            unless ( $sitout ) { $v = $teams+0; $rover = $t; }
+        }
+        push @oppo, $v;
+    }
+    push @oppo, $rover unless $sitout;
+    push @oppodata, \@oppo;
+}
+
+if ( $json ) {
+    require JSON;
+    JSON->import(qw(to_json));
+    my $assignments = to_json(\@oppodata);
+    $assignments =~ s/(\],)/$1\n/g;
+    print $assignments,"\n";
+}
+else {        
+  my $sep = q(, );	# separator between (NS,EW,board-set) triples
+  my $r = 0;
+  for my $s (1 .. $#sessions, 0) {
     my $session = $sessions[$s];
     next unless $session > 0;
     my $head = sprintf "%s T%d: EW %+d", $name, $teams, $ew_up;
@@ -102,37 +139,27 @@ for my $s (1 .. $#sessions, 0) {
     print "\n";
     print $head;
     print "5,$teams,", $session * $boards, ",$boards,$session\n";
-
-    my $sep = q(, );	# separator between (NS,EW,board-set) triples
-    my @rover;
-    for my $ns (1 .. $rounds) {
+    
+    for my $ns (1 .. $teams) {
       for my $b (1..$session) {
-        my $ew = ($rounds + 1 - $ns + $ew_up * ($r + $b - 1)) % $rounds + 1;
+        my $ew = $oppodata[$r+$b-1][$ns-1];
         print $sep if $b > 1;
 
-	my $board_set = $b;
+	    my $board_set = $b;
         if ($ew == $ns) {
-	    if ($sitout) {
-		$ew = 0 if $sitout_ew;
-		$board_set = 0 if $sitout_boards; 
+	        if ($sitout) {
+		        $ew = 0 if $sitout_ew;
+		        $board_set = 0 if $sitout_boards; 
+	        }
 	    }
-	    else { $ew = $teams; $rover[$b]=$ns; }
-	}
         print "$ns,$ew,$board_set";
       }
       print "\n";
     }
-    unless( $sitout ) {
-      for my $b (1..$session) {
-        die unless $rover[$b];
-        print $sep if $b > 1;
-        print "$teams,$rover[$b],$b";
-      }
-      print "\n";
-    }
     $r += $session;
+  }
+  warn "$r rounds: expected $rounds rounds\n" unless $r == $rounds;
 }
-warn "$r rounds: expected $rounds rounds\n" unless $r == $rounds;
 
 unless ($stdout) {
     close STDOUT or die $!;
@@ -148,7 +175,7 @@ flower.perl - create flower teams movements in JSS/EBUScore format
 =head1 USAGE
 
 perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
-[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW] 
+[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW] [--json]
 
 =head1 OPTIONS
 
@@ -206,9 +233,15 @@ Default is B<--missing-boards>: but
 B<--nomissing-boards>
 will set both board-set and EW at sitout table.
 
+=item B<--json> 
+
+Writes RealBridge config JSON value:
+some other options will be ignored or changed.
+
 =back
 
 =cut
 
 
 
+:q:q!
