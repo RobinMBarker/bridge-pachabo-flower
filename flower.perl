@@ -2,7 +2,6 @@ use strict;
 use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
-use JSON;
 
 my($file, $force);
 GetOptions ('-h', \my $help,
@@ -13,18 +12,22 @@ GetOptions ('-h', \my $help,
 	'-F:s', sub { (undef,$file) = @_; $force++; },
 	'--missing-boards!',	\my $sitout_boards,
 	'--missing-EW!',	\my $sitout_ew,
-#    '--json', \my $json,
+     '--json', \my $json,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
 
 $stdout++ if ($file and $file eq '-');
 unless ($stdout) {
-    unless ( $file ) {    
-        $file = 'config.json';
-#       $file = $json ? 'config.json':'TSUserMovements.txt';
+    my $mode;
+    if ( $json ) {
+        $file = 'config.json' unless $file;
+        $mode = '>';
     }
-    my $mode = ($force ? '>' : '>>');
+    else {
+        $file = 'TSUserMovements.txt' unless $file;
+        $mode = ($force ? '>' : '>>');
+    }
     open STDOUT, $mode, $file or die "Can't open $mode $file: $!\n";
 }
     
@@ -50,6 +53,23 @@ if( $teams ) {
     $rounds = $teams;
     $rounds-- unless $sitout;
 }
+else {
+    $sitout = $ew_up % 2 if $ew_up;
+    $rounds = $total;
+    $rounds++ if $rounds % 2 == 0;
+    $teams = $rounds;
+    $teams++ unless $sitout;
+}
+
+unless ($name) {
+  if ( $json ) {
+    $name = 'JSON'
+  }
+  else {
+    require File::Basename;
+    $name = ucfirst (File::Basename::fileparse($0, qr(\.p.*)));
+  }
+}
     
 $ew_up = 2 - ($teams % 2) unless $ew_up;
 warn "json: teams = $teams; sitout = $sitout; rounds = $rounds; ".
@@ -61,27 +81,73 @@ if ( $sitout ) {
     }
 }
 
-my @rounddata;
+unshift @sessions, ($rounds - $total);
+warn "sessions = @sessions\n";
+{ my $total_boards = $rounds * $boards; 
+  warn "total boards: $total_boards\n"; 
+}
+
+my @oppodata;
 for my $r (1 .. $rounds) {
-    my @data;
     my $rover;
-    for my $ns (1 .. $rounds) {
-        my $ew = ($rounds + 1 - $ns + $ew_up * ($r - 1)) % $rounds + 1;
+    my @oppo;
+    for my $t (1 .. $rounds) {
+        my $v = ($rounds + 1 - $t + $ew_up * ($r - 1)) % $rounds + 1;
+        if ( $v == $t ) {
+            unless ( $sitout ) { $v = $teams+0; $rover = $t; }
+        }
+        push @oppo, $v;
+    }
+    push @oppo, $rover unless $sitout;
+    push @oppodata, \@oppo;
+}
+
+if ( $json ) {
+    require JSON;
+    JSON->import(qw(to_json));
+    my $assignments = to_json(\@oppodata);
+    $assignments =~ s/(\],)/$1\n/g;
+    print $assignments,"\n";
+}
+else {        
+  my $sep = q(, );	# separator between (NS,EW,board-set) triples
+  my $r = 0;
+  for my $s (1 .. $#sessions, 0) {
+    my $session = $sessions[$s];
+    next unless $session > 0;
+    my $head = sprintf "%s T%d: EW %+d", $name, $teams, $ew_up;
+    $head .= ": Session $s" if $s;
+    $head .= ": Round";
+    $head .= "s" if $session > 1;
+    $head .= " ". ($r + 1);
+    $head .= "-". ($r + $session) if $session > 1;
+    $head .= "\n";
+    warn $head;
+
+    print "\n";
+    print $head;
+    print "5,$teams,", $session * $boards, ",$boards,$session\n";
+    
+    for my $ns (1 .. $teams) {
+      for my $b (1..$session) {
+        my $ew = $oppodata[$r+$b-1][$ns-1];
+        print $sep if $b > 1;
+
+	    my $board_set = $b;
         if ($ew == $ns) {
 	        if ($sitout) {
 		        $ew = 0 if $sitout_ew;
+		        $board_set = 0 if $sitout_boards; 
 	        }
-	        else { $ew = $teams; $rover=$ns; }
 	    }
-        push @data, $ew+0;
+        print "$ns,$ew,$board_set";
+      }
+      print "\n";
     }
-    push @data, $rover if $rover;
-    push @rounddata, \@data;
+    $r += $session;
+  }
+  warn "$r rounds: expected $rounds rounds\n" unless $r == $rounds;
 }
-
-my $output = to_json(\@rounddata);
-$output =~ s/(\],)/$1\n\t/g;
-print $output,"\n";
 
 unless ($stdout) {
     close STDOUT or die $!;
@@ -97,7 +163,7 @@ flower.perl - create flower teams movements in JSS/EBUScore format
 =head1 USAGE
 
 perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
-[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW] 
+[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW] [--json]
 
 =head1 OPTIONS
 
@@ -154,6 +220,11 @@ At the sitout table, show board-set as 0
 Default is B<--missing-boards>: but
 B<--nomissing-boards>
 will set both board-set and EW at sitout table.
+
+=item B<--json> 
+
+Writes RealBridge config JSON value:
+some other options will be ignored or changed.
 
 =back
 
