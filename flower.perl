@@ -7,12 +7,15 @@ my($file, $force);
 GetOptions ('-h', \my $help,
 	'-t=i', \my $teams, 
 	'-ew=i', \my $ew_up,
+	'-s=s', \my $sessions,
+        '-b=i', \my $boards,
+	'-n=s', \my $name,
 	'',	\my $stdout,	# matches lone -
 	'-f=s',    \$file,
 	'-F:s', sub { (undef,$file) = @_; $force++; },
 	'--missing-boards!',	\my $sitout_boards,
-	'--missing-EW!',	\my $sitout_ew,
-     '--json', \my $json,
+	'--missing-EW!',    \my $sitout_ew,
+    '--json', \my $json,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -31,12 +34,16 @@ unless ($stdout) {
     open STDOUT, $mode, $file or die "Can't open $mode $file: $!\n";
 }
     
+my @sessions;
+@sessions = split /,/, $sessions if defined $sessions;
+my $total = (sum @sessions) || 0;
+
 pod2usage ( 
 	-message => "Not enough data",
 	-verbose => 1,
 	-output  => \*STDERR,
 	-exitval => 2,
-) unless $teams;
+) unless ($teams or $total > 0);
 
 
 pod2usage ( 
@@ -72,13 +79,18 @@ unless ($name) {
 }
     
 $ew_up = 2 - ($teams % 2) unless $ew_up;
-warn "json: teams = $teams; sitout = $sitout; rounds = $rounds; ".
-	"EW-up = $ew_up\n";
+$boards = int(100/$rounds+0.5) unless $boards;
+warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
+	"EW-up = $ew_up; boards = $boards\n";
 
 if ( $sitout ) {
     unless (defined $sitout_boards or defined $sitout_ew ) {
 	$sitout_boards = 1; 	# default to old behaviour
     }
+    no warnings qw(uninitialized);
+    warn "At sitout table".
+	": missing boards=$sitout_boards".
+	"; missing EW=$sitout_ew\n"
 }
 
 unshift @sessions, ($rounds - $total);
@@ -229,6 +241,3 @@ some other options will be ignored or changed.
 =back
 
 =cut
-
-
-
