@@ -79,11 +79,12 @@ unless ($name) {
 }
     
 $ew_up = 2 - ($teams % 2) unless $ew_up;
-$boards = int(100/$rounds+0.5) unless $boards;
+$boards = $json ? 0 : int(100/$rounds+0.5) unless $boards;
 warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
 	"EW-up = $ew_up; boards = $boards\n";
 
 if ( $sitout ) {
+  unless ( $json ) {
     unless (defined $sitout_boards or defined $sitout_ew ) {
 	$sitout_boards = 1; 	# default to old behaviour
     }
@@ -91,10 +92,12 @@ if ( $sitout ) {
     warn "At sitout table".
 	": missing boards=$sitout_boards".
 	"; missing EW=$sitout_ew\n"
+  }
 }
 
 unshift @sessions, ($rounds - $total);
 warn "sessions = @sessions\n";
+if ( $boards ) 
 { my $total_boards = $rounds * $boards; 
   warn "total boards: $total_boards\n"; 
 }
