@@ -86,7 +86,7 @@ warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
 if ( $sitout ) {
   unless ( $json ) {
     unless (defined $sitout_boards or defined $sitout_ew ) {
-	$sitout_boards = 1; 	# default to old behaviour
+	    $sitout_boards = 1;     # default to old behaviour
     }
     no warnings qw(uninitialized);
     warn "At sitout table".
@@ -97,9 +97,9 @@ if ( $sitout ) {
 
 unshift @sessions, ($rounds - $total);
 warn "sessions = @sessions\n";
-if ( $boards ) 
-{ my $total_boards = $rounds * $boards; 
-  warn "total boards: $total_boards\n"; 
+if ( $boards ) {
+    my $total_boards = $rounds * $boards; 
+    warn "total boards: $total_boards\n"; 
 }
 
 my @oppodata;
