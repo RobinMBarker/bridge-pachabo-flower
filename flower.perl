@@ -8,13 +8,14 @@ GetOptions ('-h', \my $help,
 	'-t=i', \my $teams, 
 	'-ew=i', \my $ew_up,
 	'-s=s', \my $sessions,
-        '-b=i', \my $boards,
+    '-b=i', \my $boards,
 	'-n=s', \my $name,
 	'',	\my $stdout,	# matches lone -
 	'-f=s',    \$file,
 	'-F:s', sub { (undef,$file) = @_; $force++; },
 	'--missing-boards!',	\my $sitout_boards,
 	'--missing-EW!',    \my $sitout_ew,
+    '--sitout', \my $sitout,
     '--json', \my $json,
 ) or pod2usage(2);
 
@@ -45,6 +46,14 @@ pod2usage (
 	-exitval => 2,
 ) unless ($teams or $total > 0);
 
+$sitout //= (defined $sitout_ew or defined $sitout_boards);
+pod2usage ( 
+	-message => "Even number of teams: no sitout",
+	-verbose => 1,
+	-output  => \*STDERR,
+	-exitval => 2,
+) if ($teams and ($teams % 2 == 0) and $sitout);
+
 
 pod2usage ( 
 	-message => "Ignored: @ARGV",
@@ -53,15 +62,13 @@ pod2usage (
 	-exitval => q(NOEXIT),
 ) if @ARGV;
 
-my $sitout = 0;
 my $rounds;
 if( $teams ) {
-    $sitout = $teams % 2;
+    $sitout = 1 if $teams % 2;
     $rounds = $teams;
     $rounds-- unless $sitout;
 }
 else {
-    $sitout = $ew_up % 2 if $ew_up;
     $rounds = $total;
     $rounds++ if $rounds % 2 == 0;
     $teams = $rounds;
@@ -178,7 +185,8 @@ flower.perl - create flower teams movements in JSS/EBUScore format
 =head1 USAGE
 
 perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
-[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW] [--json]
+[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW]
+[--sitout] [--json]
 
 =head1 OPTIONS
 
@@ -235,6 +243,10 @@ At the sitout table, show board-set as 0
 Default is B<--missing-boards>: but
 B<--nomissing-boards>
 will set both board-set and EW at sitout table.
+
+=item B<--sitout>
+
+Sitout: odd number of teams
 
 =item B<--json> 
 
