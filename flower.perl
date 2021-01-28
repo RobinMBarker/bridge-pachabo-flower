@@ -3,6 +3,8 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
+my $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
+
 my($file, $force);
 GetOptions ('-h', \my $help,
     '-t=i', \my $teams, 
@@ -46,14 +48,12 @@ pod2usage (
     -exitval => 2,
 ) unless ($teams or $total > 0);
 
-$sitout //= (defined $sitout_ew or defined $sitout_boards);
 pod2usage ( 
     -message => "Even number of teams: no sitout",
     -verbose => 1,
     -output  => \*STDERR,
     -exitval => 2,
 ) if ($teams and ($teams % 2 == 0) and $sitout);
-
 
 pod2usage ( 
     -message => "Ignored: @ARGV",
@@ -64,11 +64,12 @@ pod2usage (
 
 my $rounds;
 if( $teams ) {
-    $sitout = 1 if $teams % 2;
+    $sitout = $teams % 2;
     $rounds = $teams;
     $rounds-- unless $sitout;
 }
 else {
+    $sitout //= (defined $sitout_ew or defined $sitout_boards);
     $rounds = $total;
     $rounds++ if $rounds % 2 == 0;
     $teams = $rounds;
@@ -85,10 +86,13 @@ unless ($name) {
   }
 }
     
-$ew_up = 2 - ($teams % 2) unless $ew_up;
+$ew_up = $json ? 2 : $sitout ? 1 : 2 unless $ew_up;
 $boards = $json ? 0 : int(100/$rounds+0.5) unless $boards;
 warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
     "EW-up = $ew_up; boards = $boards\n";
+if( $gcd ) { 
+    die "Bad EW-up\n" unless 1 == $gcd->($ew_up, $rounds); 
+}
 
 if ( $sitout ) {
   unless ( $json ) {
