@@ -19,11 +19,13 @@ GetOptions ('-h', \my $help,
     '--missing-EW!', \my $sitout_ew,
     '--sitout', \my $sitout,
     '--json',   \my $json,
+    '-8',   \my $eight,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
 
 $stdout++ if ($file and $file eq '-');
+$json++ if $eight;
 unless ($stdout) {
     my $mode;
     if ( $json ) {
@@ -128,6 +130,14 @@ for my $r (1 .. $rounds) {
     push @oppodata, \@oppo;
 }
 
+if ( $eight ) {
+    for my $round (@oppodata) {
+        die unless $teams == scalar @$round;
+        my @repeat = map {$_ + $teams} @$round;
+        push @$round, @repeat;
+    }
+}
+
 if ( $json ) {
     require JSON;
     JSON->import(qw(to_json));
@@ -190,7 +200,7 @@ flower.perl - create flower teams movements in JSS/EBUScore format
 
 perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
 [-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW]
-[--sitout] [--json]
+[--sitout] [--json] [-8]
 
 =head1 OPTIONS
 
@@ -256,6 +266,10 @@ Sitout: odd number of teams
 
 Writes RealBridge config JSON value:
 some other options will be ignored or changed.
+
+=item B<-8>
+
+Double movement for teams-of-eight, sets B<--json>
 
 =back
 
