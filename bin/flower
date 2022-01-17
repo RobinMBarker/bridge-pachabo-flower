@@ -3,6 +3,9 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
+main() unless caller;
+
+sub main {
 my $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 my($file, $force);
@@ -188,6 +191,8 @@ else {
 unless ($stdout) {
     close STDOUT or die $!;
     warn "Movement written to $file\n";
+}
+
 }
 
 __END__

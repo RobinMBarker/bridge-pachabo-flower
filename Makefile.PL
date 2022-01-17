@@ -5,10 +5,11 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'Bridge::Flower',
     VERSION_FROM      => 'lib/Bridge/Flower.pm', # finds $VERSION, requires EU::MM from perl >= 5.5
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
+    PREREQ_PM         => {JSON=>0}, # e.g., Module::Name => 1.1
     ABSTRACT_FROM     => 'lib/Bridge/Flower.pm', # retrieve abstract from module
-    AUTHOR            => 'A. U. Thor <a.u.thor@a.galaxy.far.far.away>',
-    #LICENSE           => 'perl',
+    AUTHOR            => 'Robin Barker r.m.barker@btinternet.com',
+    LICENSE           => 'perl',
     #Value must be from legacy list of licenses here
     #https://metacpan.org/pod/Module::Build::API
+    EXE_FILES         => [qw(bin/flower)],
 );
