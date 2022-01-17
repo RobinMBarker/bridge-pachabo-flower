@@ -1,8 +1,5 @@
 use strict;
 use Test::More tests => 5;
-use File::Temp ();
-use JSON;
-use File::Slurp qw(read_file);
 
 BEGIN { 
     push @INC, -d 'blib' ? qw(blib/script) :
@@ -19,16 +16,23 @@ ok( $require_ok, 'flower.perl script' );
 {
     my $warn;
     local $SIG{__WARN__} = sub { $warn .= $_[0] };
+    require File::Temp;
     my $file = File::Temp->new( SUFFIX => '.json' )->filename;
     local @ARGV = qw(-t 13 --json -F);
     push @ARGV, $file;
     main();
     ok( -e $file, 'flower.perl' );
     like($warn, qr{^ Movement \s+ written \s+ to \s+ \Q$file\E $}msx, 'flower.perl - warning');
-    my $json = from_json(read_file($file));
+
+  SKIP: {
+    eval q{require Bridge::JSON::File} or 
+        skip 2, "No Bridge::JSON::File" ;
+
+    my $json = Bridge::JSON::File->read_json($file);
     ok( defined $json, 'flower.perl - JSON output');
     my $expect = eval (do{ local $/; <DATA>}) or die;
     is_deeply($json, $expect, 'flower.perl - JSON checked');
+  }
 }
 
 
