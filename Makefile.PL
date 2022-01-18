@@ -8,7 +8,7 @@ WriteMakefile(
     PREREQ_PM         => {  JSON                    => 0, 
                             'Text::CSV'             => 2,
                             'Bridge::JSON::File'    => 0, 
-                            'Math::Utils'           =>  0,
+                            'Math::Utils'           => 0,
                         }, 
     ABSTRACT_FROM     => 'lib/Bridge/Flower.pm', # retrieve abstract 
     AUTHOR            => 'Robin Barker r.m.barker@btinternet.com',
