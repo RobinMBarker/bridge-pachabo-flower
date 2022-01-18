@@ -1,7 +1,9 @@
 use strict;
-use Bridge::Flower;
+require Bridge::Flower;
 
 main() unless caller;
+
+sub main { Bridge::Flower->main }
 
 __END__
 
