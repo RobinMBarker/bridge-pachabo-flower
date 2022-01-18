@@ -2,7 +2,9 @@ Makefile.PL
 MANIFEST
 README
 t/Bridge-Flower.t
+t/flower.t
 t/flower13.t
+t/flower14.t
 lib/Bridge/Flower.pm
 lib/Bridge/Flower/JSON.pm
 bin/flower
