@@ -1,9 +1,11 @@
 use strict;
+use warnings;
+
 require Bridge::Flower;
 
 main() unless caller;
 
-sub main { Bridge::Flower->main }
+sub main { Bridge::Flower->main; }
 
 __END__
 
