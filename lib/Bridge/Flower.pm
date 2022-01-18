@@ -27,6 +27,14 @@ sub main {
 
 sub JSON { __PACKAGE__.'::JSON'; }
 
+# too much grief to call this sub 'require'
+sub required {
+    my($self,$pack) = @_;
+    # warn $self ."->required($pack);\n";
+    eval qq{ require $pack; } or die $@;
+    return $pack;
+}
+
 sub getoptions {
     my $pack = shift;
     my($file, $force);
@@ -82,12 +90,8 @@ sub getoptions {
         -exitval => q(NOEXIT),
     ) if @ARGV;
     
-    if ( $json ) {
-        $pack = $pack->JSON;
-        eval qq{require $pack;} 
-            or die "require $pack: $@";
-    }
-
+    my %missing = ( boards  => $sitout_boards,
+                    EW      => $sitout_ew, );
     my $self = {
         file    => $file,
         force   => $force,
@@ -101,11 +105,11 @@ sub getoptions {
         eight   =>  $eight,
         sessions => $sessions,
     };
-    $self->{missing}->{boards} = $sitout_boards 
-        if defined $sitout_boards; 
-    $self->{missing}->{EW} = $sitout_ew 
-        if defined $sitout_ew; 
+    while ( my($k,$v) = each %missing ) {
+        $self->{missing}->{$k} = $v if defined $v;
+    }
     
+    $pack = $pack->required($pack->JSON) if $json;
     return bless $self, $pack;
 } 
 
