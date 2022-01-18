@@ -9,18 +9,18 @@ require_ok 'Bridge::Flower';
     local $SIG{__WARN__} = sub { $warn .= $_[0] };
     require File::Temp;
     my $file = File::Temp->new( SUFFIX => '.txt' )->filename;
-    local @ARGV = (qw(-missing-EW -s), q(7,6), q(-F), $file);
+    local @ARGV = (qw(--missing-EW -s), q(7,6), q(-F), $file);
     Bridge::Flower->main();
     ok( -e $file, 'flower --missing-EW' );
     like($warn,
         qr{^ Movement \s+ written \s+ to  
             \s+ \Q$file\E $}msx, 
-       'flower -missing-EW - warning');
+       'flower --missing-EW - warning');
 
     my $got = csv(in=>$file);
     ok( defined $got, 'flower --missing-EW - output');
     my $expect = csv(in=>\*DATA);
-    is_deeply($got, $expect, 'flower -missing-EW - checked');
+    is_deeply($got, $expect, 'flower --missing-EW - checked');
 }
 
 # XXX
