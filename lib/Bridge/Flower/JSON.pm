@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Bridge::Flower);
 
-our $VERSION = '0.99';
+our $VERSION = '1.00';
 
 sub set_file {
     my $self = shift;
@@ -74,11 +74,11 @@ F<bin/flower>
 
 =over 
 
-=item 0.99
+=item 1.00
 
 2022-01-18 Robin Barker
 
-From Bridge/Flower.pm
+Split from Bridge/Flower.pm
 
 =back
 

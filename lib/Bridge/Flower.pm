@@ -7,7 +7,7 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
-our $VERSION = '0.99';
+our $VERSION = '1.00';
 our $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 sub main {
@@ -327,9 +327,15 @@ Renamed F<flower.perl> as F<bin/flower>
 
 =item 0.99
 
-2022-01-187 Robin Barker
+2022-01-17 Robin Barker
 
 Moved code to modules
+
+=item 1.00
+
+2022-01-18 Robin Barker
+
+Release
 
 =back
 
