@@ -4,9 +4,13 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     NAME              => 'Bridge::Flower',
-    VERSION_FROM      => 'lib/Bridge/Flower.pm', # finds $VERSION, requires EU::MM from perl >= 5.5
-    PREREQ_PM         => {JSON=>0}, # e.g., Module::Name => 1.1
-    ABSTRACT_FROM     => 'lib/Bridge/Flower.pm', # retrieve abstract from module
+    VERSION_FROM      => 'lib/Bridge/Flower.pm', # finds $VERSION
+    PREREQ_PM         => {  JSON                    => 0, 
+                            'Text::CSV'             => 2,
+                            'Bridge::JSON::File'    => 0, 
+                            'Math::Utils'           =>  0,
+                        }, 
+    ABSTRACT_FROM     => 'lib/Bridge/Flower.pm', # retrieve abstract 
     AUTHOR            => 'Robin Barker r.m.barker@btinternet.com',
     LICENSE           => 'perl',
     #Value must be from legacy list of licenses here
