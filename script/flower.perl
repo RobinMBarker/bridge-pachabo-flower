@@ -1,0 +1,276 @@
+use strict;
+use Pod::Usage;
+use Getopt::Long(qw(:config posix_default no_ignore_case));
+use List::Util qw(sum);
+
+my $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
+
+my($file, $force);
+GetOptions ('-h', \my $help,
+    '-t=i', \my $teams, 
+    '-ew=i', \my $ew_up,
+    '-s=s', \my $sessions,
+    '-b=i', \my $boards,
+    '-n=s', \my $name,
+    '',     \my $stdout,    # matches lone -
+    '-f=s', \$file,
+    '-F:s', sub { (undef,$file) = @_; $force++; },
+    '--missing-boards!', \my $sitout_boards,
+    '--missing-EW!', \my $sitout_ew,
+    '--sitout', \my $sitout,
+    '--json',   \my $json,
+    '-8',   \my $eight,
+) or pod2usage(2);
+
+pod2usage(1) if $help;
+
+$stdout++ if ($file and $file eq '-');
+$json++ if $eight;
+unless ($stdout) {
+    my $mode;
+    if ( $json ) {
+        $file = 'config.json' unless $file;
+        $mode = '>';
+    }
+    else {
+        $file = 'TSUserMovements.txt' unless $file;
+        $mode = ($force ? '>' : '>>');
+    }
+    open STDOUT, $mode, $file or die "Can't open $mode $file: $!\n";
+}
+    
+my @sessions;
+@sessions = split /,/, $sessions if defined $sessions;
+my $total = (sum @sessions) || 0;
+
+pod2usage ( 
+    -message => "Not enough data",
+    -verbose => 1,
+    -output  => \*STDERR,
+    -exitval => 2,
+) unless ($teams or $total > 0);
+
+pod2usage ( 
+    -message => "Even number of teams: no sitout",
+    -verbose => 1,
+    -output  => \*STDERR,
+    -exitval => 2,
+) if ($teams and ($teams % 2 == 0) and $sitout);
+
+pod2usage ( 
+    -message => "Ignored: @ARGV",
+    -verbose => 0,
+    -output  => \*STDERR,
+    -exitval => q(NOEXIT),
+) if @ARGV;
+
+my $rounds;
+if( $teams ) {
+    $sitout = $teams % 2;
+    $rounds = $teams;
+    $rounds-- unless $sitout;
+}
+else {
+    $sitout //= (defined $sitout_ew or defined $sitout_boards);
+    $rounds = $total;
+    $rounds++ if $rounds % 2 == 0;
+    $teams = $rounds;
+    $teams++ unless $sitout;
+}
+
+unless ($name) {
+  if ( $json ) {
+    $name = 'JSON'
+  }
+  else {
+    require File::Basename;
+    $name = ucfirst (File::Basename::fileparse($0, qr(\.p.*)));
+  }
+}
+    
+$ew_up = $json ? 2 : $sitout ? 1 : 2 unless $ew_up;
+$boards = $json ? 0 : int(100/$rounds+0.5) unless $boards;
+warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
+    "EW-up = $ew_up; boards = $boards\n";
+if( $gcd ) { 
+    die "Bad EW-up\n" unless 1 == $gcd->($ew_up, $rounds); 
+}
+
+if ( $sitout ) {
+  unless ( $json ) {
+    unless (defined $sitout_boards or defined $sitout_ew ) {
+        $sitout_boards = 1;     # default to old behaviour
+    }
+    no warnings qw(uninitialized);
+    warn "At sitout table".
+    ": missing boards=$sitout_boards".
+    "; missing EW=$sitout_ew\n"
+  }
+}
+
+unshift @sessions, ($rounds - $total);
+warn "sessions = @sessions\n";
+if ( $boards ) {
+    my $total_boards = $rounds * $boards; 
+    warn "total boards: $total_boards\n"; 
+}
+
+my @oppodata;
+for my $r (1 .. $rounds) {
+    my $rover;
+    my @oppo;
+    for my $t (1 .. $rounds) {
+        my $v = ($rounds + 1 - $t + $ew_up * ($r - 1)) % $rounds + 1;
+        if ( $v == $t ) {
+            unless ( $sitout ) { $v = $teams+0; $rover = $t; }
+        }
+        push @oppo, $v;
+    }
+    push @oppo, $rover unless $sitout;
+    push @oppodata, \@oppo;
+}
+
+if ( $eight ) {
+    for my $round (@oppodata) {
+        die unless $teams == scalar @$round;
+        my @repeat = map {$_ + $teams} @$round;
+        push @$round, @repeat;
+    }
+}
+
+if ( $json ) {
+    require JSON;
+    JSON->import(qw(to_json));
+    my $assignments = to_json(\@oppodata);
+    $assignments =~ s/(\],)/$1\n/g;
+    print $assignments,"\n";
+}
+else {        
+  my $sep = q(, );  # separator between (NS,EW,board-set) triples
+  my $r = 0;
+  for my $s (1 .. $#sessions, 0) {
+    my $session = $sessions[$s];
+    next unless $session > 0;
+    my $head = sprintf "%s T%d: EW %+d", $name, $teams, $ew_up;
+    $head .= ": Session $s" if $s;
+    $head .= ": Round";
+    $head .= "s" if $session > 1;
+    $head .= " ". ($r + 1);
+    $head .= "-". ($r + $session) if $session > 1;
+    $head .= "\n";
+    warn $head;
+
+    print "\n";
+    print $head;
+    print "5,$teams,", $session * $boards, ",$boards,$session\n";
+    
+    for my $ns (1 .. $teams) {
+      for my $b (1..$session) {
+        my $ew = $oppodata[$r+$b-1][$ns-1];
+        print $sep if $b > 1;
+
+        my $board_set = $b;
+        if ($ew == $ns) {
+            if ($sitout) {
+                $ew = 0 if $sitout_ew;
+                $board_set = 0 if $sitout_boards; 
+            }
+        }
+        print "$ns,$ew,$board_set";
+      }
+      print "\n";
+    }
+    $r += $session;
+  }
+  warn "$r rounds: expected $rounds rounds\n" unless $r == $rounds;
+}
+
+unless ($stdout) {
+    close STDOUT or die $!;
+    warn "Movement written to $file\n";
+}
+
+__END__
+
+=head1 NAME
+
+flower.perl - create flower teams movements in JSS/EBUScore format
+
+=head1 USAGE
+
+perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
+[-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW]
+[--sitout] [--json] [-8]
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h> 
+
+Print this help
+
+=item B<-t> num
+
+Number of teams
+
+=item B<-ew> num
+
+Signed movement of EW pairs: +2 for 'up two', -1 for down 'one'
+
+=item B<-s> string
+
+Comma separated list of session lengths (rounds per session)
+
+=item B<-b> num
+
+Number of board per round: 
+
+defaults to a complete movement of approx 100 boards
+
+=item B<-n> name
+
+Name of movement
+
+=item B<->
+
+Write to STDOUT
+
+=item B<-f> file
+
+Write to file: default 'TSUserMovements.txt'
+
+=item B<-F> [file]
+
+As B<-f> but start new file
+
+Standalone B<-F> starts new 'TSUserMovements.txt'
+
+=item B<--missing-EW> [B<--nomissing-EW>]
+
+At the sitout table, show EW as 0
+
+=item B<--missing-boards> [B<--nomissing-boards>]
+
+At the sitout table, show board-set as 0
+
+Default is B<--missing-boards>: but
+B<--nomissing-boards>
+will set both board-set and EW at sitout table.
+
+=item B<--sitout>
+
+Sitout: odd number of teams
+
+=item B<--json> 
+
+Writes RealBridge config JSON value:
+some other options will be ignored or changed.
+
+=item B<-8>
+
+Double movement for teams-of-eight, sets B<--json>
+
+=back
+
+=cut
