@@ -88,7 +88,7 @@ sub getoptions {
             or die "require $pack: $@";
     }
 
-    return bless {
+    my $self = {
         file    => $file,
         force   => $force,
         teams   => $teams, 
@@ -97,12 +97,16 @@ sub getoptions {
         boards  => $boards,
         name    => $name,
         stdout  => $stdout,   
-        missing => $sitout_boards,
-        miss_ew => $sitout_ew,
        sitout   => $sitout,
         eight   =>  $eight,
         sessions => $sessions,
-    }, $pack;
+    };
+    $self->{missing}->{boards} = $sitout_boards 
+        if defined $sitout_boards; 
+    $self->{missing}->{EW} = $sitout_ew 
+        if defined $sitout_ew; 
+    
+    return bless $self, $pack;
 } 
 
 sub openout {
@@ -129,8 +133,7 @@ sub set_rounds {
         $self->{rounds}-- unless $self->{sitout};
     }
     else {
-        $self->{sitout} //=(defined $self->{miss_ew} or
-                            defined $self->{missing} );
+        $self->{sitout} //= exists $self->{missing};
         my $rounds = $self->{total};
         $rounds++ if $rounds % 2 == 0;
         $self->{teams} = $self->{rounds} = $rounds;
@@ -183,13 +186,13 @@ sub total_boards {
 
 sub set_missing {
     my $self = shift;
-    $self->{missing} = 1    # default to old behaviour
-            unless (defined $self->{missing} or 
-                    defined $self->{miss_ew} );
+    $self->{missing}->{boards} = 1   
+            # default to old behaviour
+            unless exists $self->{missing};
     no warnings qw(uninitialized);
     warn    "At sitout table".
-            ": missing boards=$self->{missing}".
-            "; missing EW=$self->{miss_ew}\n"
+            ": missing boards=$self->{missing}->{boards}".
+            "; missing EW=$self->{missing}->{EW}\n"
 }
 
 sub oppodata {
@@ -223,8 +226,8 @@ sub writeout {
     my $teams   = $self->{teams};
     my $boards  = $self->{boards};
     my $sitout  = $self->{sitout};
-    my $missing_boards  = $self->{missing};
-    my $missing_ew      = $self->{miss_ew};
+    my $missing_boards  = $self->{missing}->{boards};
+    my $missing_ew      = $self->{missing}->{EW};
     my $sep = q(, );  # separator between (NS,EW,board-set) triples
     my $r = 0;
     for my $s (1 .. $#{$sessions}, 0) {
