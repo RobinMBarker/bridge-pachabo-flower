@@ -4,4 +4,5 @@ README
 t/Bridge-Flower.t
 t/flower13.t
 lib/Bridge/Flower.pm
+lib/Bridge/Flower/JSON.pm
 bin/flower

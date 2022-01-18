@@ -16,17 +16,16 @@ sub main {
      $opts->openout unless $opts->{stdout};
      $opts->set_rounds;
      $opts->set_name unless $opts->{name};
+     $opts->set_ew_up unless $opts->{ew_up};
+     $opts->set_boards unless $opts->{boards};
      $opts->total_boards;
      $opts->oppodata;
      $opts->eights if $opts->{eight};
-     if ( $opts->{json} ) {
-         $opts->writejson
-     }
-     else {
-         $opts->writeout;
-     }
+     $opts->writeout;
      $opts->closeout unless $opts->{stdout};
 }
+
+sub JSON { __PACKAGE__.'::JSON'; }
 
 sub getoptions {
     my $pack = shift;
@@ -83,6 +82,12 @@ sub getoptions {
         -exitval => q(NOEXIT),
     ) if @ARGV;
     
+    if ( $json ) {
+        $pack = $pack->JSON;
+        eval qq{require $pack;} 
+            or die "require $pack: $@";
+    }
+
     return bless {
         file    => $file,
         force   => $force,
@@ -95,7 +100,6 @@ sub getoptions {
         missing => $sitout_boards,
         miss_ew => $sitout_ew,
        sitout   => $sitout,
-        json    => $json,
         eight   =>  $eight,
         sessions => $sessions,
     }, $pack;
@@ -103,20 +107,20 @@ sub getoptions {
 
 sub openout {
     my $self = shift;
-    my $mode;
-    if ( $self->{json} ) {
-            $self->{file} //= 'config.json';
-            $mode = '>';
-    }
-    else {
-            $self->{file} //= 'TSUserMovements.txt';
-            $mode = ($self->{force} ? '>' : '>>');
-    }
+    $self->set_file unless $self->{file};
+    my $mode = $self->write ? '>' : '>>';
     my $file = $self->{file};
     open STDOUT, $mode, $file or 
         die "Can't open $mode $file: $!\n";
 }
-        
+
+sub set_file {
+    my $self = shift;
+    $self->{file} = 'TSUserMovements.txt';
+}
+
+sub write { my $self = shift; return $self->{force}; }
+
 sub set_rounds {
     my $self = shift;
     if( my $teams = $self->{teams} ) {
@@ -135,49 +139,39 @@ sub set_rounds {
 }
 
 sub set_name {
-    my $self = shift;
-    if ( $self->{json} ) {
-        $self->{name} = 'JSON'
-    }
-    else {
+        my $self = shift;
         require File::Basename;
         my $basename = File::Basename::fileparse($0, qr(\..*));
         $self->{name} = ucfirst $basename;  # Flower
-    }
 }
         
+sub set_ew_up {
+    my $self = shift;
+    $self->{ew_up} =  $self->{sitout} ? 1 : 2
+}
+
+sub set_boards {
+    my $self = shift;
+    $self->{boards} = int(100/$self->{rounds} + 0.5); 
+}
+
 sub total_boards {
     my $self = shift;
-    my $json = $self->{json};
     my $name = $self->{name};
     my $teams = $self->{teams};
     my $sitout = $self->{sitout};
     my $rounds = $self->{rounds};
     my $ew_up = $self->{ew_up};
-    $ew_up = $self->{ew_up} =  $json ? 2 : $sitout ? 1 : 2
-        unless $ew_up;
     my $boards = $self->{boards};
-    $boards = $self->{boards} = $json ? 0 : int(100/$rounds+0.5) 
-        unless $boards;
+    
     warn "$name: teams = $teams; sitout = $sitout; rounds = $rounds; ".
         "EW-up = $ew_up; boards = $boards\n";
     if( $gcd ) { 
         die "Bad EW-up\n" unless 1 == $gcd->($ew_up, $rounds); 
     }
     
-    if ( $sitout ) {
-        unless ( $json ) {
-            unless (defined $self->{missing} or 
-                    defined $self->{miss_ew}) {
-                $self->{missing} = 1;    # default to old behaviour
-            }
-            no warnings qw(uninitialized);
-            warn    "At sitout table".
-                    ": missing boards=$self->{missing}".
-                    "; missing EW=$self->{miss_ew}\n"
-        }
-    }
-    
+    $self->set_missing if $sitout;
+
     my $sessions = $self->{sessions} //= [];
     unshift @$sessions, ($rounds - $self->{total});
     warn "sessions = @$sessions\n";
@@ -185,6 +179,17 @@ sub total_boards {
         my $total_boards = $rounds * $boards; 
         warn "total boards: $total_boards\n"; 
     }
+}
+
+sub set_missing {
+    my $self = shift;
+    $self->{missing} = 1    # default to old behaviour
+            unless (defined $self->{missing} or 
+                    defined $self->{miss_ew} );
+    no warnings qw(uninitialized);
+    warn    "At sitout table".
+            ": missing boards=$self->{missing}".
+            "; missing EW=$self->{miss_ew}\n"
 }
 
 sub oppodata {
@@ -208,25 +213,6 @@ sub oppodata {
         push @oppodata, \@oppo;
     }
     $self->{oppodata} = \@oppodata;
-}
-
-sub eights {
-        my $self = shift;
-        my $teams = $self->{teams};
-        for my $round (@{$self->{oppodata}}) {
-            die unless $teams == scalar @$round;
-            my @repeat = map {$_ + $teams} @$round;
-            push @$round, @repeat;
-        }
-}
-
-sub writejson {
-        my $self = shift;
-        require JSON;
-        JSON->import(qw(to_json));
-        my $assignments = to_json($self->{oppodata});
-        $assignments =~ s/(\],)/$1\n/g;
-        print $assignments,"\n";
 }
 
 sub writeout {
@@ -334,7 +320,9 @@ Renamed F<flower.perl> as F<bin/flower>
 
 =item 0.99
 
-2022-01-17 Robin Barker
+2022-01-187 Robin Barker
+
+Moved code to modules
 
 =back
 
@@ -352,3 +340,4 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
+
