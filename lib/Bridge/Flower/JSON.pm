@@ -4,14 +4,14 @@ use strict;
 use warnings;
 use parent qw(Bridge::Flower);
 
-our $VERSION = '1.00';
+our $VERSION = '1.10';
 
 sub set_file {
     my $self = shift;
     $self->{file} = 'config.json';
 }
 
-sub write { return 1 }
+# sub write { return 1 }
 
 sub set_name {
     my $self = shift;
