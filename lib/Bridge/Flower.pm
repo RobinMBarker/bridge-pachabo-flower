@@ -7,7 +7,7 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
-our $VERSION = '1.00';
+our $VERSION = '1.10';
 our $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 sub main {
@@ -305,7 +305,7 @@ main()
 =head1 HISTORY
 
 =over 8
-o
+
 =item Pre-history
 
 F<flower.perl> was created in 2015 to produce

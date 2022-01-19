@@ -82,7 +82,22 @@ Sitout: odd number of teams
 =item B<--json> 
 
 Writes RealBridge config JSON value:
-some other options will be ignored or changed.
+
+=over
+
+=item
+
+Some other options will be ignored or changed.
+
+=item
+
+Default output is F<config.json>
+
+=item
+
+Output file is appended to, unless B<-F>.
+
+=back
 
 =item B<-8>
 
