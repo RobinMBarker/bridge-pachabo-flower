@@ -30,12 +30,11 @@ unless ($stdout) {
     my $mode;
     if ( $json ) {
         $file = 'config.json' unless $file;
-        $mode = '>';
     }
     else {
         $file = 'TSUserMovements.txt' unless $file;
-        $mode = ($force ? '>' : '>>');
     }
+    $mode = ($force ? '>' : '>>');
     open STDOUT, $mode, $file or die "Can't open $mode $file: $!\n";
 }
     
