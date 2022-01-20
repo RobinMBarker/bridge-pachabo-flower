@@ -7,7 +7,7 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
-our $VERSION = '1.10';
+our $VERSION = '1.20';
 our $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 sub main {
@@ -53,7 +53,8 @@ sub getoptions {
         '--missing-EW!', \my $sitout_ew,
         '--sitout', \my $sitout,
         '--json',   \my $json,
-        '-8',   \my $eight,
+        '-8',       \my $eight,
+        '--key:s',  \my $key,
     ) or pod2usage(2);
     
     pod2usage(1) if $help;
@@ -63,7 +64,8 @@ sub getoptions {
     }
     
     $stdout++ if ($file and $file eq '-');
-    $json++ if $eight;
+    $key = 'match_assignments' if defined $key and !$key;
+    $json++ if $eight or $key;
 
     $sessions = [ split /,/, $sessions ]
         if defined $sessions;
@@ -102,7 +104,8 @@ sub getoptions {
         name    => $name,
         stdout  => $stdout,   
        sitout   => $sitout,
-        eight   =>  $eight,
+        eight   => $eight,
+        key     => $key,
         sessions => $sessions,
     };
     while ( my($k,$v) = each %missing ) {
@@ -336,6 +339,14 @@ Moved code to modules
 2022-01-18 Robin Barker
 
 Release
+
+=item 1.10
+
+=item 1.20 
+
+2022-01-20 Robin Barker
+
+Add --key to output JSON keu=value
 
 =back
 

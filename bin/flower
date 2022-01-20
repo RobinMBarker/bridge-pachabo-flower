@@ -17,7 +17,7 @@ flower.perl - create flower teams movements in JSS/EBUScore format
 
 perl -w flower.perl [-h] [-t num] [-ew num] [-s str] [-b num] [-n str]
 [-] [-f file] [-F [file]] [--[no]missing-boards] [--[no]missing-EW]
-[--sitout] [--json] [-8]
+[--sitout] [--json] [-8] [--key [str]]
 
 =head1 OPTIONS
 
@@ -102,6 +102,11 @@ Output file is appended to, unless B<-F>.
 =item B<-8>
 
 Double movement for teams-of-eight, sets B<--json>
+
+=item B<--key> [string]
+
+JSON output as key:value pair, 
+key defaults to 'match_assignments'.
 
 =back
 

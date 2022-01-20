@@ -4,14 +4,12 @@ use strict;
 use warnings;
 use parent qw(Bridge::Flower);
 
-our $VERSION = '1.10';
+our $VERSION = '1.20';
 
 sub set_file {
     my $self = shift;
     $self->{file} = 'config.json';
 }
-
-# sub write { return 1 }
 
 sub set_name {
     my $self = shift;
@@ -34,7 +32,7 @@ sub eights {
         my $self = shift;
         my $teams = $self->{teams};
         for my $round (@{$self->{oppodata}}) {
-            die unless $tea::ms == scalar @$round;
+            die unless $teams == scalar @$round;
             my @repeat = map {$_ + $teams} @$round;
             push @$round, @repeat;
         }
@@ -46,6 +44,16 @@ sub writeout {
         JSON->import(qw(to_json));
         my $assignments = to_json($self->{oppodata});
         $assignments =~ s/(\],)/$1\n/g;
+        if ( my $key = $self->{key} ) {
+            my $tab = " "x4;
+            $assignments =~ s/\A\[/\[\n/;
+            $assignments =~ s/\]\z/\n$tab\]/;
+            $assignments = "{\n".
+                           $tab.to_json($key)." : ".
+                            $assignments .
+                            "\n}";
+            $assignments =~ s/^\[/$tab$tab\[/msg;
+        }
         print $assignments,"\n";
 }
 
@@ -85,6 +93,10 @@ Split from Bridge/Flower.pm
 2022-01-19 Robin Barker
 
 Do not over-write JSON output file (unless -F)
+
+=item 1.20
+
+Write key:value JSON output
 
 =back
 
