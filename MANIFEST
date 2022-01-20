@@ -5,6 +5,7 @@ t/Bridge-Flower.t
 t/flower.t
 t/flower13.t
 t/flower14.t
+t/assignments.t
 t/pod.t
 lib/Bridge/Flower.pm
 lib/Bridge/Flower/JSON.pm
