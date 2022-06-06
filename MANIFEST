@@ -8,6 +8,8 @@ t/flower14.t
 t/assignments.t
 t/key-value.t
 t/pod.t
+# t/pod-coverage.t
+t/json_string.t
 lib/Bridge/Flower.pm
 lib/Bridge/Flower/JSON.pm
 bin/flower
