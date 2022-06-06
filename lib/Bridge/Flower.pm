@@ -7,7 +7,7 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
-our $VERSION = '1.20';
+our $VERSION = '1.30';
 our $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 sub main {
@@ -19,8 +19,7 @@ sub main {
      $opts->set_ew_up unless $opts->{ew_up};
      $opts->set_boards unless $opts->{boards};
      $opts->total_boards;
-     $opts->oppodata;
-     $opts->eights if $opts->{eight};
+     $opts->oppodata_eight;
      $opts->writeout;
      $opts->closeout unless $opts->{stdout};
 }
@@ -64,8 +63,8 @@ sub getoptions {
     }
     
     $stdout++ if ($file and $file eq '-');
-    $key = 'match_assignments' if defined $key and !$key;
-    $json++ if $eight or $key;
+    my $no_key = not(defined $key);
+    $json++ if $eight or !$no_key;
 
     $sessions = [ split /,/, $sessions ]
         if defined $sessions;
@@ -106,6 +105,7 @@ sub getoptions {
        sitout   => $sitout,
         eight   => $eight,
         key     => $key,
+        no_key  => $no_key,
         sessions => $sessions,
     };
     while ( my($k,$v) = each %missing ) {
@@ -223,6 +223,12 @@ sub oppodata {
         push @oppodata, \@oppo;
     }
     $self->{oppodata} = \@oppodata;
+}
+
+sub oppodata_eight {
+    my $self = shift;
+    $self->oppodata;
+    $self->eights if $self->{eight};
 }
 
 sub writeout {
