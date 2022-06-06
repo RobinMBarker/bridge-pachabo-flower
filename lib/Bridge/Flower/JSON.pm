@@ -92,20 +92,105 @@ __END__
 
 =head1 NAME
 
-Bridge::Flower::JSON - Perl extension to implement JSON output from flower.perl
+Bridge::Flower::JSON - Perl extension to Bridge::Flower for JSON output 
 
 =head1 SYNOPSIS
 
-  use Bridge::Flower;
-  main()
+  require Bridge::Flower::JSON;
+  my $json_string = Bridge::Flower::JSON->string({teams=>8});
 
-Create flower teams movement as JSON match_assignment value.
+=head1 DESCRIPTION
+
+JSON support for Bridge::Flower, 
+to create flower teams movement as JSON match_assignment value;
+by overriding some methods.
+
+Can be used to produce JSON values using C<string> method.
 
 =head2 SEE ALSO
 
 Bridge::Flower
 
 F<bin/flower>
+
+=head2 METHODS
+
+=over
+
+=item set_file 
+
+See Bridge::Flower
+
+=item set_name 
+
+See Bridge::Flower
+
+=item set_ew_up 
+
+See Bridge::Flower, set EW move to "up 2"
+
+=item set_boards 
+
+Set Bridge::Flower, C<boards> valuue not used
+
+=item set_missing 
+
+Not used
+
+=item eights 
+
+Calculate double movement (for teams of eight)
+from existing C<oppodata>
+
+=item value 
+
+String of movement data as JSON array
+
+=item key_value 
+
+String of movement data as JSON key-pair
+
+=item assignments 
+
+String of movement data as JSON object or array
+
+=item writeout 
+
+=item string(HASH)
+
+Package method taking a HASH value (see OPTIONS)
+and returning a string of movement data as
+JSON value or key-value pair.
+
+=back
+
+=head2 OPTIONS
+
+The C<string> method hash has keys corresponding to
+C<bin/flower> options. 
+
+=over
+
+=item C<teams>: C<-t>
+
+Number of team: required
+
+=item C<eight>: C<-8>
+
+Double movement, for teams of eight
+
+=item C<key>: C<--key>
+
+The key for the JSON key-value pair,
+defaults to C<match_assignments>.
+
+=item C<no_key>: missing C<--key> 
+
+Output just the ARRAY value
+
+=back
+
+Other keys will be (at best) be ignored.
 
 =head1 HISTORY
 
@@ -125,7 +210,19 @@ Do not over-write JSON output file (unless -F)
 
 =item 1.20
 
+2022-01-20 Robin Barker
+
 Write key:value JSON output
+
+=item 1.30
+
+2022-06-06 Robin Barker
+
+Added methods: 
+C<string>, 
+C<value>, 
+C<key_value>,
+C<assignments>.
 
 =back
 

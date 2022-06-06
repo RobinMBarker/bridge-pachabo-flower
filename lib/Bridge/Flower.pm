@@ -29,7 +29,6 @@ sub JSON { __PACKAGE__.'::JSON'; }
 # too much grief to call this sub 'require'
 sub required {
     my($self,$pack) = @_;
-    # warn $self ."->required($pack);\n";
     eval qq{ require $pack; } or die $@;
     return $pack;
 }
@@ -154,7 +153,7 @@ sub set_name {
         my $basename = File::Basename::fileparse($0, qr(\..*));
         $self->{name} = ucfirst $basename;  # Flower
 }
-        
+
 sub set_ew_up {
     my $self = shift;
     $self->{ew_up} =  $self->{sitout} ? 1 : 2
@@ -292,7 +291,7 @@ sub closeout {
 
 __END__
 
-=head1 NAME
+=head1 NAMEH
 
 Bridge::Flower - Perl extension  to implement the script flower.perl
 
@@ -301,15 +300,96 @@ Bridge::Flower - Perl extension  to implement the script flower.perl
   use Bridge::Flower;
   main()
 
+=head1 DESCRIPTION
+
 Create flower teams movement.
 
 =head2 SEE ALSO
 
 F<bin/flower>
 
-=head2 EXPORT
+=head2 METHODS
 
-main()
+=over
+
+=item main 
+
+Package method used by F<bin/flower>
+
+=item JSON 
+
+Package method to define subclass for JSON handling.
+
+=item required(PACKAGE)
+
+Require package (given as string - not bareword)
+
+=item getoptions 
+
+Package method to read options from C<@ARGV>
+and return options as am object.
+
+=item openout 
+
+Open the output file for append or write.
+
+=item set_file 
+
+Set the default output file
+
+=item write 
+
+Returns true if output mode is write 
+(rather than append)
+
+
+=item set_rounds 
+
+Process number of teams and number of rounds
+
+=item set_name 
+
+Set the default name of the movement
+
+=item set_ew_up 
+
+Set the EW pair movement
+
+=item set_boards
+
+Set the defaulber of boards, 
+based on ~100 boards in the overall event.
+
+=item total_boards 
+
+Display the movement parameter and
+calculate the total number of boards.
+
+=item set_missing 
+
+Return TRUE if there is a sitout.
+
+=item oppodata 
+
+Calculate the movement data
+
+=item oppodata_eight 
+
+Do C<oppodata> and C<eights>.
+
+=item eights
+
+(only defined for JSON)
+
+=item writeout 
+
+Write the output
+
+=item closeout 
+
+Close the output file
+
+=back
 
 =head1 HISTORY
 
@@ -348,11 +428,20 @@ Release
 
 =item 1.10
 
+See Bridge::Flower::JSON
+
 =item 1.20 
 
 2022-01-20 Robin Barker
 
-Add --key to output JSON keu=value
+Add --key to output JSON key-value
+
+=item 1.30
+
+2022-06-06 Robin Barker
+
+Added C<no_key>, and other changes, to
+facilitate C<< Bridge::Flower::JSON->string(HASH) >> 
 
 =back
 
