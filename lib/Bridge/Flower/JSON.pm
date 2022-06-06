@@ -91,31 +91,8 @@ sub string {
     $self->set_rounds;
     $self->set_ew_up;
     $self->oppodata_eight;
-    return $self->{no_key}  ? self->value 
-                            : Eself->key_value;
-}
-
-1;
-
-__END__
-
-sub writeout { print shift()->assignments; }
-
-sub string {
-    my($self, $data) = @_;
-    if (ref $self) {
-        warn "Ignore data to $self->string()\n"
-            if $data;
-    }
-    else {
-        $data = {} unless $data;
-        $self = bless $data, $self;
-    }
-    $self->set_rounds;
-    $self->set_ew_up;
-    $self->oppodata_eight;
-    return $self->{no_key}  ? self->value 
-                            : Eself->key_value;
+    return $self->{no_key}  ? $self->value 
+                            : $self->key_value;
 }
 
 1;
