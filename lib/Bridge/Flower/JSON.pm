@@ -3,8 +3,9 @@ package Bridge::Flower::JSON;
 use strict;
 use warnings;
 use parent qw(Bridge::Flower);
+use JSON qw(to_json);
 
-our $VERSION = '1.20';
+our $VERSION = '1.30';
 
 sub set_file {
     my $self = shift;
@@ -38,23 +39,83 @@ sub eights {
         }
 }
 
-sub writeout {
+sub value {
         my $self = shift;
-        require JSON;
-        JSON->import(qw(to_json));
         my $assignments = to_json($self->{oppodata});
         $assignments =~ s/(\],)/$1\n/g;
-        if ( my $key = $self->{key} ) {
+        return $assignments;
+}
+
+sub key_value {
+            my $self = shift;
+            die if $self->{no_key};
+            my $key = $self->{key};
+            $key ||= 'match_assignments';
             my $tab = " "x4;
+            my $assignments = $self->value;
             $assignments =~ s/\A\[/\[\n/;
             $assignments =~ s/\]\z/\n$tab\]/;
-            $assignments = "{\n".
-                           $tab.to_json($key)." : ".
-                            $assignments .
-                            "\n}";
-            $assignments =~ s/^\[/$tab$tab\[/msg;
+            my $key_value = $tab.to_json($key)." : ".
+                            $assignments;
+            $key_value =~ s/^\[/$tab$tab\[/msg;
+            return $key_value;
+}
+
+sub assignments {
+        my $self = shift;
+        my $assignments;
+        if ( $self->{no_key} ) {
+            $assignments = $self->value;
         }
-        print $assignments,"\n";
+        else {
+            $assignments = "{\n".
+                            $self->key_value .
+                            "\n}";
+        }
+        $assignments .= "\n";
+        return $assignments;
+}
+
+sub writeout { print shift()->assignments; }
+
+sub string {
+    my($self, $data) = @_;
+    if (ref $self) {
+        warn "Ignore data to $self->string()\n"
+            if $data;
+    }
+    else {
+        $data = {} unless $data;
+        $self = bless $data, $self;
+    }
+    $self->set_rounds;
+    $self->set_ew_up;
+    $self->oppodata_eight;
+    return $self->{no_key}  ? self->value 
+                            : Eself->key_value;
+}
+
+1;
+
+__END__
+
+sub writeout { print shift()->assignments; }
+
+sub string {
+    my($self, $data) = @_;
+    if (ref $self) {
+        warn "Ignore data to $self->string()\n"
+            if $data;
+    }
+    else {
+        $data = {} unless $data;
+        $self = bless $data, $self;
+    }
+    $self->set_rounds;
+    $self->set_ew_up;
+    $self->oppodata_eight;
+    return $self->{no_key}  ? self->value 
+                            : Eself->key_value;
 }
 
 1;
