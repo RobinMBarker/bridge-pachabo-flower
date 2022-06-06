@@ -61,22 +61,13 @@ sub key_value {
             return $key_value;
 }
 
-sub assignments {
+sub assignments {   
         my $self = shift;
-        my $assignments;
-        if ( $self->{no_key} ) {
-            $assignments = $self->value;
-        }
-        else {
-            $assignments = "{\n".
-                            $self->key_value .
-                            "\n}";
-        }
-        $assignments .= "\n";
-        return $assignments;
+        return $self->{no_key} ? $self->value
+            : "{\n".  $self->key_value .  "\n}";
 }
 
-sub writeout { print shift()->assignments; }
+sub writeout { print shift()->assignments, "\n"; }
 
 sub string {
     my($self, $data) = @_;
