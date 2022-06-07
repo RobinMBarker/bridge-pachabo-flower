@@ -29,6 +29,12 @@ sub set_boards {
 
 sub set_missing {}
 
+sub oppodata {
+    my $self = shift;
+    $self->SUPER::oppodata;
+    $self->eights if $self->{eight};
+}
+
 sub eights {
         my $self = shift;
         my $teams = $self->{teams};
@@ -81,7 +87,7 @@ sub string {
     }
     $self->set_rounds;
     $self->set_ew_up;
-    $self->oppodata_eight;
+    $self->oppodata;
     return $self->{no_key}  ? $self->value 
                             : $self->key_value;
 }
@@ -136,6 +142,11 @@ Set Bridge::Flower, C<boards> valuue not used
 =item set_missing 
 
 Not used
+
+=item oppodata
+
+Calculate movement data, 
+including double movement
 
 =item eights 
 

@@ -19,7 +19,7 @@ sub main {
      $opts->set_ew_up unless $opts->{ew_up};
      $opts->set_boards unless $opts->{boards};
      $opts->total_boards;
-     $opts->oppodata_eight;
+     $opts->oppodata;
      $opts->writeout;
      $opts->closeout unless $opts->{stdout};
 }
@@ -224,12 +224,6 @@ sub oppodata {
     $self->{oppodata} = \@oppodata;
 }
 
-sub oppodata_eight {
-    my $self = shift;
-    $self->oppodata;
-    $self->eights if $self->{eight};
-}
-
 sub writeout {
     my $self = shift;
     my $sessions = $self->{sessions};
@@ -372,14 +366,6 @@ Return TRUE if there is a sitout.
 =item oppodata 
 
 Calculate the movement data
-
-=item oppodata_eight 
-
-Do C<oppodata> and C<eights>.
-
-=item eights
-
-(only defined for JSON)
 
 =item writeout 
 
