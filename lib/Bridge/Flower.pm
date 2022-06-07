@@ -285,7 +285,7 @@ sub closeout {
 
 __END__
 
-=head1 NAMEH
+=head1 NAME
 
 Bridge::Flower - Perl extension  to implement the script flower.perl
 
