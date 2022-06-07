@@ -32,10 +32,10 @@ sub set_missing {}
 sub oppodata {
     my $self = shift;
     $self->SUPER::oppodata;
-    $self->eights if $self->{eight};
+    $self->double if $self->{eight};
 }
 
-sub eights {
+sub double {
         my $self = shift;
         my $teams = $self->{teams};
         for my $round (@{$self->{oppodata}}) {
@@ -148,7 +148,7 @@ Not used
 Calculate movement data, 
 including double movement
 
-=item eights 
+=item double 
 
 Calculate double movement (for teams of eight)
 from existing C<oppodata>
