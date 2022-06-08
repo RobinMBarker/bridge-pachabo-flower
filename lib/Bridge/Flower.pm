@@ -7,7 +7,7 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
-our $VERSION = '1.30';
+our $VERSION = '1.35';  
 our $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 sub main {
@@ -53,6 +53,7 @@ sub getoptions {
         '--json',   \my $json,
         '-8',       \my $eight,
         '--key:s',  \my $key,
+        '--indent|i=i', \my $indent,
     ) or pod2usage(2);
     
     pod2usage(1) if $help;
@@ -105,6 +106,7 @@ sub getoptions {
         eight   => $eight,
         key     => $key,
         no_key  => $no_key,
+        indent  => $indent,
         sessions => $sessions,
     };
     while ( my($k,$v) = each %missing ) {
@@ -428,6 +430,14 @@ Add --key to output JSON key-value
 
 Added C<no_key>, and other changes, to
 facilitate C<< Bridge::Flower::JSON->string(HASH) >> 
+
+=item 1.35
+
+2022-06-08 Robin Barker
+
+Added -i for indent in JSON output
+
+More output methods from ::JSON
 
 =back
 
