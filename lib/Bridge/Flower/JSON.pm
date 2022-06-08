@@ -5,7 +5,7 @@ use warnings;
 use parent qw(Bridge::Flower);
 use JSON qw(to_json);
 
-our $VERSION = '1.30';
+our $VERSION = '1.35';
 
 sub set_file {
     my $self = shift;
@@ -57,7 +57,7 @@ sub key_value {
             die if $self->{no_key};
             my $key = $self->{key};
             $key ||= 'match_assignments';
-            my $tab = " "x4;
+            my $tab = " "x $self->{indent};
             my $assignments = $self->value;
             $assignments =~ s/\A\[/\[\n/;
             $assignments =~ s/\]\z/\n$tab\]/;
@@ -69,6 +69,7 @@ sub key_value {
 
 sub assignments {   
         my $self = shift;
+        $self->{indent} //= 4;
         return $self->{no_key} ? $self->value
             : "{\n".  $self->key_value .  "\n}";
 }
@@ -77,19 +78,30 @@ sub writeout { print shift()->assignments, "\n"; }
 
 sub string {
     my($self, $data) = @_;
-    if (ref $self) {
-        warn "Ignore data to $self->string()\n"
-            if $data;
-    }
-    else {
-        $data = {} unless $data;
-        $self = bless $data, $self;
-    }
+    return $self->make($data)->stringify;
+}
+
+sub make {
+    my($pack, $data) = @_;
+    my $self = bless( ($data||{}), (ref $pack || $pack) );
     $self->set_rounds;
     $self->set_ew_up;
     $self->oppodata;
+    return $self;
+}
+
+sub stringify {
+    my $self = shift;
+    $self->{indent} //= 2;
     return $self->{no_key}  ? $self->value 
                             : $self->key_value;
+}
+
+sub objectify { shift()->{oppodata} };
+
+sub object {
+    my($self, $data) = @_;
+    return $self->make($data)->objectify;
 }
 
 1;
@@ -173,12 +185,31 @@ Package method taking a HASH value (see OPTIONS)
 and returning a string of movement data as
 JSON value or key-value pair.
 
+=item make(HASH) 
+
+Package method taking a HASH value and
+returning a Perl object containing movement data
+
+=item object(HASH)
+
+Package method taking a HASH value and
+returning a Perl ARRAY of movement data
+
+=item objectify
+
+Return the ARRAY of movement data
+
+=item stringify
+
+Return a string of movement data as
+JSON value or key-value pair
+
 =back
 
 =head2 OPTIONS
 
-The C<string> method hash has keys corresponding to
-C<bin/flower> options. 
+The HASH for the C<string>, C<object> and C<make> methods
+has keys corresponding to C<bin/flower> options. 
 
 =over
 
@@ -199,6 +230,11 @@ defaults to C<match_assignments>.
 
 Output just the ARRAY value
 
+=item C<indent>: C<--indent>
+
+Indent for output string
+
+
 =back
 
 Other keys will be (at best) be ignored.
@@ -218,7 +254,7 @@ Split from Bridge/Flower.pm
 2022-01-19 Robin Barker
 
 Do not over-write JSON output file (unless -F)
-
+/
 =item 1.20
 
 2022-01-20 Robin Barker
@@ -234,6 +270,20 @@ C<string>,
 C<value>, 
 C<key_value>,
 C<assignments>.
+
+=item 1.35
+
+2022-06-08 Robin Barker
+
+Added methods:
+C<make>,
+C<object>,
+C<objectify>,
+C<stringify>
+
+Reimplemented C<string> with C<make>
+
+Implemented C<indent> option
 
 =back
 
