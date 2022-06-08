@@ -83,7 +83,7 @@ sub string {
 
 sub make {
     my($pack, $data) = @_;
-    my $self = bless( ($data||{}), (ref $pack || $pack) );
+    my $self = bless $data, $pack;
     $self->set_rounds;
     $self->set_ew_up;
     $self->oppodata;
@@ -254,7 +254,7 @@ Split from Bridge/Flower.pm
 2022-01-19 Robin Barker
 
 Do not over-write JSON output file (unless -F)
-/
+
 =item 1.20
 
 2022-01-20 Robin Barker
