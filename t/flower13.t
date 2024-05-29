@@ -26,7 +26,7 @@ ok( $require_ok, 'flower script' );
 
   SKIP: {
     eval q{require Bridge::JSON::File} or 
-        skip 2, "No Bridge::JSON::File" ;
+        skip "No Bridge::JSON::File", 2;
 
     my $json = Bridge::JSON::File->read_json($file);
     ok( defined $json, 'flower.perl - JSON output');

@@ -18,7 +18,7 @@ require_ok 'Bridge::Flower';
 
 SKIP: {
     eval q{require Bridge::JSON::File} or
-        skip 2, "No Bridge::JSON::File" ;
+        skip "No Bridge::JSON::File", 2;
 
     my $got = Bridge::JSON::File->read_json($file);
     ok( defined $got, 'flower --key- output');
