@@ -21,7 +21,7 @@ SKIP: {
         skip "No Bridge::JSON::File", 2;
 
     my $got = Bridge::JSON::File->read_json($file);
-    ok( defined $got, 'flower --key=string- output');
+    ok( defined $got, 'flower --key=string - output');
     is_deeply([keys %$got], [qw(wibble)],
             'flower --key=string - checked');
   }
