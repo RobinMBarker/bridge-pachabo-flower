@@ -30,14 +30,18 @@ This module requires these other modules and libraries:
 
     Text::CSV 2.0
     JSON
-    Bridge::JSON::File - for testing
     Math::Utils
+
+This module uses Bridge::JSON::File for testing,
+but the Bridge::JSON distribution requires Bridge::Flower -
+so this distribution will build and test
+without Bridge::JSON::File - but some tests will skip.
 
 COPYRIGHT AND LICENCE
 
 Put the correct copyright and licence information here.
 
-Copyright (C) 2022 by Robin Barker
+Copyright (C) 2024 by Robin Barker
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.32.1 or,

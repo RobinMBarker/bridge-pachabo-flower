@@ -439,6 +439,15 @@ Added -i for indent in JSON output
 
 More output methods from ::JSON
 
+=item 1.36
+
+2024-05-29  Robin Barker
+
+Removed dependency on Bridge::JSON::File
+
+Added skip in tests for no Bridge::JSON::File,
+and fixed syntax of C<skip>
+
 =back
 
 =head1 AUTHOR

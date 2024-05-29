@@ -7,7 +7,7 @@ WriteMakefile(
     VERSION_FROM      => 'lib/Bridge/Flower.pm', # finds $VERSION
     PREREQ_PM         => {  JSON                    => 0, 
                             'Text::CSV'             => 2,
-                            'Bridge::JSON::File'    => 0, 
+                        #   'Bridge::JSON::File'    => 0, 
                             'Math::Utils'           => 0,
                         }, 
     ABSTRACT_FROM     => 'lib/Bridge/Flower.pm', # retrieve abstract 
