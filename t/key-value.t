@@ -1,6 +1,5 @@
 use strict;
 use Test::More tests => 5;
-use Bridge::JSON::File;
 
 require_ok 'Bridge::Flower';
 
@@ -17,8 +16,13 @@ require_ok 'Bridge::Flower';
             \s+ \Q$file\E $}msx, 
        'flower --key=string - warning');
 
+SKIP: {
+    eval q{require Bridge::JSON::File} or
+        skip 2, "No Bridge::JSON::File" ;
+
     my $got = Bridge::JSON::File->read_json($file);
     ok( defined $got, 'flower --key=string- output');
     is_deeply([keys %$got], [qw(wibble)],
             'flower --key=string - checked');
+  }
 }

@@ -16,11 +16,13 @@ To install this module type the following:
 
 FUNCTIONALITY
 
-Script bin/flower
-
-Method Bridge::Flower::JSON->string(HASH)
+Script 
 
     flower
+
+Method 
+
+    Bridge::Flower::JSON->string(HASH)
 
 DEPENDENCIES
 
@@ -28,7 +30,7 @@ This module requires these other modules and libraries:
 
     Text::CSV 2.0
     JSON
-    Bridge::JSON::File
+    Bridge::JSON::File - for testing
     Math::Utils
 
 COPYRIGHT AND LICENCE

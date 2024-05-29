@@ -11,7 +11,7 @@ BEGIN {
 my $require_ok = eval { require q(flower); };
 
 diag $INC{flower};
-ok( $require_ok, 'flower.perl script' );
+ok( $require_ok, 'flower script' );
 
 {
     my $warn;

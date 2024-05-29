@@ -7,7 +7,7 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
-our $VERSION = '1.35';  
+our $VERSION = '1.36';  
 our $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 sub main {

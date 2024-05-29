@@ -1,6 +1,5 @@
 use strict;
 use Test::More tests => 5;
-use Bridge::JSON::File;
 
 require_ok 'Bridge::Flower';
 
@@ -17,10 +16,15 @@ require_ok 'Bridge::Flower';
             \s+ \Q$file\E $}msx, 
        'flower --key - warning');
 
+SKIP: {
+    eval q{require Bridge::JSON::File} or
+        skip 2, "No Bridge::JSON::File" ;
+
     my $got = Bridge::JSON::File->read_json($file);
     ok( defined $got, 'flower --key- output');
     my $expect = { match_assignments => [ [8,7,6,5,4,3,2,1],
     [3,8,1,7,6,5,4,2], [5,4,8,2,1,7,6,3], [7,6,5,8,3,2,1,4],
     [2,1,7,6,8,4,3,5], [4,3,2,1,7,8,5,6], [6,5,4,3,2,1,8,7] ] };
     is_deeply($got, $expect, 'flower --key - checked');
+  }
 }
