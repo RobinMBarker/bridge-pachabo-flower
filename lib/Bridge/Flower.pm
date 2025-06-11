@@ -7,7 +7,8 @@ use Pod::Usage;
 use Getopt::Long(qw(:config posix_default no_ignore_case));
 use List::Util qw(sum);
 
-our $VERSION = '1.36';  
+our $VERSION = '1.40';
+
 our $gcd = eval { require Math::Utils } && Math::Utils->can('gcd');
 
 sub main {
@@ -447,6 +448,16 @@ Removed dependency on Bridge::JSON::File
 
 Added skip in tests for no Bridge::JSON::File,
 and fixed syntax of C<skip>
+
+=item 1.40
+
+2025-06-11  Robin Barker
+
+Added back dependency on Bridge::JSON::File
+
+Bridge::JSON::File is separate from Bridge::JSON.
+This distribution should be installed after 
+Bridge::JSON::File and before Bridge::JSON.
 
 =back
 
